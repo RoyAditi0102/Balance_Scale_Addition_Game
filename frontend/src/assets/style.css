@@ -1,0 +1,43 @@
+body
+{
+  background-color: beige;
+}
+
+.game-container
+{
+  text-align: center;
+  font-family: 'Franklin Gothic Medium', sans-serif;
+  color: red;
+}
+
+.numbers button
+{
+  margin: 5px;
+  padding: 10px;
+  font-size: 18px;
+  
+}
+
+.scale
+{
+  font-size: 40px;
+  margin: 20px;
+}
+
+.scale.left
+{
+  font-size: 400%;
+  color: cadetblue;
+}
+
+.scale.right
+{
+  font-size: 400%;
+  color:red ;
+}
+
+.scale.balanced
+{
+  font-size: 400%;
+  color: green;
+}
