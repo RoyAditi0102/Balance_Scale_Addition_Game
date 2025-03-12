@@ -3,9 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import random
 
-
 app = FastAPI()
 
+@app.get("/")
+def read_root():
+    return {"message": "Backend is working!"}
+    
 app.add_middleware(
     CORSMiddleware,
     allow_origins = ["*"],
