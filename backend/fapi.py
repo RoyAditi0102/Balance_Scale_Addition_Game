@@ -18,10 +18,10 @@ app.add_middleware(
 )
 
 game_state = {
-    "numbers": [random.randint(1, 20) for _ in range(5)],
+    "numbers": [random.randint(1, 10) for _ in range(5)],
     "selected_numbers": [],
     "sum": 0,
-    "target": random.randint(10, 50),
+    "target": random.randint(10, 20),
     "status": "Select numbers to match the target!",
     "scale_tilt": "balanced",
 }
