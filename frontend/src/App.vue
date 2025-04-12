@@ -49,18 +49,28 @@ const fetchGameState = async () => {
     statusMessage.value = "Failed to load game!";
   }
 };
-
+ const showWinPopup = ref(false);
+ 
 const selectNumber = async (num) => {
-  try {
+
     const response = await api.post("/select-number", { num });
     sum.value = response.data.sum;
     selectedNumbers.value = response.data.selected_numbers;
     statusMessage.value = response.data.status;
     updateScaleTilt();
-  } catch (error) {
-    console.error("Error selecting number", error);
-    statusMessage.value = "Failed to update selection!";
-  }
+
+    if (game_state["sum"] < game_state["target"]) {
+  game_state["scale_tilt"] = "left";
+  game_state["status"] = "Too low! Add more.";
+} else if (game_state["sum"] > game_state["target"]) {
+  game_state["scale_tilt"] = "right";
+  game_state["status"] = "Too high! Remove numbers.";
+} else {
+  game_state["scale_tilt"] = "balanced";
+  game_state["status"] = "Correct! You matched the target.";
+  showWinPopup.value = true; 
+}
+
 };
 
 const resetGame = async () => {
@@ -89,9 +99,23 @@ const updateScaleTilt = () => {
 };
 
 const tiltAngle = computed(() => {
-  const diff = target.value - sum.value; // target on left, selection on right
+  const diff = sum.value - target.value; 
   return Math.max(Math.min(diff * 2, 30), -30);
 });
+
+const clearLastNumber = () => {
+  if (selectedNumbers.value.length > 0) {
+    const last = selectedNumbers.value.pop();
+    sum.value -= last;
+    statusMessage.value = "Last number removed!";
+    updateScaleTilt();
+  }
+};
+
+const resetWithPopupClose = () => {
+  showWinPopup.value = false;
+  resetGame();
+};
 
 onMounted(fetchGameState);
 </script>
@@ -137,46 +161,48 @@ onMounted(fetchGameState);
             <g>
   <circle :cx="60" :cy="80 - tiltAngle / 2" r="15" fill="gray" />
   <g v-for="(n, idx) in targetVisuals" :key="'left-'+idx">
-    <circle
-      :cx="60"
-      :cy="80 + tiltAngle / 2 - 20 - idx * 12"
-      r="8"
-      fill="#fcd5ce"
-      stroke="#333"
-    />
-    <text
-      :x="60"
-      :y="80 + tiltAngle / 2 - 20 - idx * 12 + 3"
-      text-anchor="middle"
-      font-size="7"
-      fill="#000"
-    >
-      {{ n }}
-    </text>
-  </g>
+  <circle
+    :cx="60"
+    :cy="80 - tiltAngle / 2 - 20 - idx * 12"
+    r="8"
+    fill="#fcd5ce"
+    stroke="#333"
+  />
+  <text
+    :x="60"
+    :y="80 - tiltAngle / 2 - 20 - idx * 12 + 3"
+    text-anchor="middle"
+    font-size="7"
+    fill="#000"
+  >
+    {{ n }}
+  </text>
+</g>
+
 </g>
 
 <!-- Right Pan - Selected Numbers -->
 <g>
   <circle :cx="140" :cy="80 + tiltAngle / 2" r="15" fill="gray" />
   <g v-for="(num, index) in selectedNumbers" :key="'right-'+index">
-    <circle
-      :cx="140"
-      :cy="80 - tiltAngle / 2 - 20 - index * 12"
-      r="8"
-      fill="#d4f1f4"
-      stroke="#333"
-    />
-    <text
-      :x="140"
-      :y="80 - tiltAngle / 2 - 20 - index * 12 + 3"
-      text-anchor="middle"
-      font-size="7"
-      fill="#000"
-    >
-      {{ num }}
-    </text>
-  </g>
+  <circle
+    :cx="140"
+    :cy="80 + tiltAngle / 2 - 20 - index * 12"
+    r="8"
+    fill="#d4f1f4"
+    stroke="#333"
+  />
+  <text
+    :x="140"
+    :y="80 + tiltAngle / 2 - 20 - index * 12 + 3"
+    text-anchor="middle"
+    font-size="7"
+    fill="#000"
+  >
+    {{ num }}
+  </text>
+</g>
+
 </g>
             </svg>
           </div>
@@ -188,13 +214,31 @@ onMounted(fetchGameState);
               :key="num" 
               @click="selectNumber(num)" 
               :disabled="selectedNumbers.includes(num)"
+              :class="{ 'disabled-number': selectedNumbers.includes(num) }"
             >
               {{ num }}
             </button>
           </div>
 
           <p>Selected Sum: {{ sum }}</p>
-          <button @click="resetGame">Reset</button>
+          <!-- Action buttons -->
+<div class="actions">
+  <button @click="resetGame">Reset</button>
+  <button @click="clearLastNumber" :disabled="selectedNumbers.length === 0" class="clear-button">
+    Clear Last
+  </button>
+  </div>
+
+  <transition name="fade-popup">
+  <div v-if="showWinPopup" class="win-popup-overlay">
+    <div class="win-popup">
+      <h2>🎉 You Matched the Target! 🎯</h2>
+      <p>Great job, keep practicing!</p>
+      <button @click="resetWithPopupClose">Play Again</button>
+    </div>
+  </div>
+</transition>
+
         </div>
       </div>
     </transition>

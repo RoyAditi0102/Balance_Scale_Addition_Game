@@ -18,10 +18,10 @@ app.add_middleware(
 )
 
 # Allow repeated digits in selection? True = yes, False = disable button after pick
-ALLOW_REPEATS = False
+ALLOW_REPEATS = True
 
 game_state = {
-    "numbers": list(range(10)),  # Digits 0-9
+    "numbers": list(range(1,10)),  # Digits 0-9
     "selected_numbers": [],
     "sum": 0,
     "target": random.randint(10, 20),
