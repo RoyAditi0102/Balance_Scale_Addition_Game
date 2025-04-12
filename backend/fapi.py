@@ -8,7 +8,7 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {"message": "Backend is working!"}
-    
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins = ["*"],
@@ -17,15 +17,17 @@ app.add_middleware(
     allow_headers = ["*"],
 )
 
+# Allow repeated digits in selection? True = yes, False = disable button after pick
+ALLOW_REPEATS = False
+
 game_state = {
-    "numbers": [random.randint(1, 10) for _ in range(5)],
+    "numbers": list(range(10)),  # Digits 0-9
     "selected_numbers": [],
     "sum": 0,
     "target": random.randint(10, 20),
     "status": "Select numbers to match the target!",
     "scale_tilt": "balanced",
 }
-
 
 class NumberSelection(BaseModel):
     num: int
@@ -39,13 +41,15 @@ async def get_game_state():
 async def select_number(selection: NumberSelection):
     """Handle number selection logic."""
     num = selection.num
-    if num in game_state["selected_numbers"]:
+
+    # Disallow repeated numbers if flag is set
+    if not ALLOW_REPEATS and num in game_state["selected_numbers"]:
         return {"message": "Number already selected!"}
-    
+
     game_state["selected_numbers"].append(num)
     game_state["sum"] += num
 
-    
+    # Update status and tilt
     if game_state["sum"] < game_state["target"]:
         game_state["scale_tilt"] = "left"
         game_state["status"] = "Too low! Add more."
@@ -60,8 +64,8 @@ async def select_number(selection: NumberSelection):
 
 @app.post("/reset-game")
 async def reset_game():
-    """Reset the game with new random numbers and a target."""
-    game_state["numbers"] = [random.randint(1, 10) for _ in range(5)]
+    """Reset the game with digits 0–9 and a new target."""
+    game_state["numbers"] = list(range(10))
     game_state["selected_numbers"] = []
     game_state["sum"] = 0
     game_state["target"] = random.randint(10, 20)
