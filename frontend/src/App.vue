@@ -2,6 +2,14 @@
 import { ref, onMounted, computed } from "vue";
 import api from "./api.js";
 
+// 🎬 Entry screen toggle
+const showEntry = ref(true);
+const startGame = () => {
+  console.log("clicked!");
+  showEntry.value = false;
+};
+
+// Game state
 const numbers = ref([]);
 const selectedNumbers = ref([]);
 const sum = ref(0);
@@ -9,70 +17,8 @@ const target = ref(0);
 const statusMessage = ref("");
 const scaleTilt = ref("balanced");
 
-// Fetch game state from API
-const fetchGameState = async () => {
-  try {
-    const response = await api.get("/game-state");
-    numbers.value = response.data.numbers;
-    sum.value = response.data.sum;
-    target.value = response.data.target;
-    selectedNumbers.value = response.data.selected_numbers;
-    updateScaleTilt();
-  } catch (error) {
-    console.error("Error fetching game state:", error);
-    statusMessage.value = "Failed to load game!";
-  }
-};
-
-// Handle number selection
-const selectNumber = async (num) => {
-  try {
-    const response = await api.post("/select-number", { num });
-    sum.value = response.data.sum;
-    selectedNumbers.value = response.data.selected_numbers;
-    statusMessage.value = response.data.status;
-    updateScaleTilt();
-  } catch (error) {
-    console.error("Error selecting number", error);
-    statusMessage.value = "Failed to update selection!";
-  }
-};
-
-// Reset game state
-const resetGame = async () => {
-  try {
-    const response = await api.post("/reset-game");
-    numbers.value = response.data.numbers;
-    sum.value = 0;
-    selectedNumbers.value = [];
-    target.value = response.data.target;
-    statusMessage.value = "Game Reset!";
-    scaleTilt.value = "balanced"; 
-  } catch (error) {
-    console.error("Error resetting game:", error);
-    statusMessage.value = "Failed to reset game!";
-  }
-};
-
-// Update scale tilt based on sum difference
-const updateScaleTilt = () => {
-  if (sum.value < target.value) {
-    scaleTilt.value = "left";
-  } else if (sum.value > target.value) {
-    scaleTilt.value = "right";
-  } else {
-    scaleTilt.value = "balanced";
-  }
-};
-
-// Compute tilt angle dynamically
-const tiltAngle = computed(() => {
-  const diff = sum.value - target.value;
-  return Math.max(Math.min(diff * 2, 30), -30); // Limit tilt between -30° to 30°
-});
-
+// Target visual breakdown
 const targetVisuals = computed(() => {
-  // For simplicity, break into approximate values
   const vals = [];
   let remaining = target.value;
   while (remaining >= 10) {
@@ -89,33 +35,106 @@ const targetVisuals = computed(() => {
   return vals;
 });
 
+// Backend calls
+const fetchGameState = async () => {
+  try {
+    const response = await api.get("/game-state");
+    numbers.value = response.data.numbers;
+    sum.value = response.data.sum;
+    target.value = response.data.target;
+    selectedNumbers.value = response.data.selected_numbers;
+    updateScaleTilt();
+  } catch (error) {
+    console.error("Error fetching game state:", error);
+    statusMessage.value = "Failed to load game!";
+  }
+};
+
+const selectNumber = async (num) => {
+  try {
+    const response = await api.post("/select-number", { num });
+    sum.value = response.data.sum;
+    selectedNumbers.value = response.data.selected_numbers;
+    statusMessage.value = response.data.status;
+    updateScaleTilt();
+  } catch (error) {
+    console.error("Error selecting number", error);
+    statusMessage.value = "Failed to update selection!";
+  }
+};
+
+const resetGame = async () => {
+  try {
+    const response = await api.post("/reset-game");
+    numbers.value = response.data.numbers;
+    sum.value = 0;
+    selectedNumbers.value = [];
+    target.value = response.data.target;
+    statusMessage.value = "Game Reset!";
+    scaleTilt.value = "balanced"; 
+  } catch (error) {
+    console.error("Error resetting game:", error);
+    statusMessage.value = "Failed to reset game!";
+  }
+};
+
+const updateScaleTilt = () => {
+  if (sum.value < target.value) {
+    scaleTilt.value = "left";
+  } else if (sum.value > target.value) {
+    scaleTilt.value = "right";
+  } else {
+    scaleTilt.value = "balanced";
+  }
+};
+
+const tiltAngle = computed(() => {
+  const diff = target.value - sum.value; // target on left, selection on right
+  return Math.max(Math.min(diff * 2, 30), -30);
+});
+
+onMounted(fetchGameState);
 </script>
 
+
 <template>
-  <div class="game-container">
-    <h1>Balance Scale Addition</h1>
-    <p>Target Sum: {{ target }}</p>
+  <div class="background-wrapper">
+    <!-- Background Image -->
+    <div class="background-image"></div>
 
-    <p class="status">{{ statusMessage }}</p>
+    <!-- Entry Screen -->
+    <transition name="fade-scale">
+      <div class="entry-screen" v-if="showEntry">
+        <button class="start-button" @click="startGame">Start Game</button>
+      </div>
+    </transition>
 
-<!-- Balance Scale -->
-<div class="scale-container">
-  <svg viewBox="0 0 200 100" class="balance-scale">
-    <!-- Base -->
-    <rect x="90" y="50" width="20" height="50" fill="black" />
+    <!-- Game Section -->
+    <transition name="fade-scale">
+      <div class="game-overlay" v-if="!showEntry">
+        <div class="game-container">
+          <p>Target Sum: {{ target }}</p>
 
-    <!-- Beam -->
-    <rect
-      x="50"
-      y="45"
-      width="100"
-      height="5"
-      fill="black"
-      :transform="`rotate(${tiltAngle} 100 50)`"
-    />
+          <p class="status">{{ statusMessage }}</p>
 
-    <!-- Left Pan - Target Weights -->
-<g>
+          <!-- Balance Scale -->
+          <div class="scale-container">
+            <svg viewBox="0 0 200 100" class="balance-scale">
+              <!-- Base -->
+            <rect x="90" y="50" width="20" height="50" fill="black" />
+
+            <!-- Beam -->
+            <rect
+              x="50"
+              y="45"
+              width="100"
+              height="5"
+              fill="black"
+              :transform="`rotate(${tiltAngle} 100 50)`"
+            />
+
+            <!-- Left Pan - Target Weights -->
+            <g>
   <circle :cx="60" :cy="80 - tiltAngle / 2" r="15" fill="gray" />
   <g v-for="(n, idx) in targetVisuals" :key="'left-'+idx">
     <circle
@@ -159,26 +178,26 @@ const targetVisuals = computed(() => {
     </text>
   </g>
 </g>
+            </svg>
+          </div>
 
-  </svg>
-</div>
+          <!-- Number Buttons -->
+          <div class="numbers">
+            <button 
+              v-for="num in numbers" 
+              :key="num" 
+              @click="selectNumber(num)" 
+              :disabled="selectedNumbers.includes(num)"
+            >
+              {{ num }}
+            </button>
+          </div>
 
-
-    <!-- Number Buttons -->
-    <div class="numbers">
-      <button 
-        v-for="num in numbers" 
-        :key="num" 
-        @click="selectNumber(num)" 
-        :disabled="selectedNumbers.includes(num)"
-      >
-        {{ num }}
-      </button>
-    </div>
-
-    <p>Selected Sum: {{ sum }}</p>
-
-    <button @click="resetGame">Reset</button>
+          <p>Selected Sum: {{ sum }}</p>
+          <button @click="resetGame">Reset</button>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 

@@ -61,10 +61,10 @@ async def select_number(selection: NumberSelection):
 @app.post("/reset-game")
 async def reset_game():
     """Reset the game with new random numbers and a target."""
-    game_state["numbers"] = [random.randint(1, 20) for _ in range(5)]
+    game_state["numbers"] = [random.randint(1, 10) for _ in range(5)]
     game_state["selected_numbers"] = []
     game_state["sum"] = 0
-    game_state["target"] = random.randint(10, 50)
+    game_state["target"] = random.randint(10, 20)
     game_state["status"] = "Select numbers to match the target!"
     game_state["scale_tilt"] = "balanced"
 
