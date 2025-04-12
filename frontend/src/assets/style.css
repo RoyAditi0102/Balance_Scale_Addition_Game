@@ -1,13 +1,22 @@
 body
 {
   background-color: beige;
+  justify-content: center;
+  align-items: center;
 }
 
 .game-container
 {
+  justify-content: center;
+  align-items: center;
   text-align: center;
   font-family: 'Franklin Gothic Medium', sans-serif;
+  margin-top: 5%;
   color: red;
+  height: 50%;
+  width: 50%;
+  margin-left: 25%;
+  margin-right: 20%;
 }
 
 .numbers button
@@ -17,27 +26,29 @@ body
   font-size: 18px;
   
 }
-
-.scale
-{
-  font-size: 40px;
-  margin: 20px;
+.scale-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50% ;
+  margin-bottom: 20px;
 }
 
-.scale.left
-{
-  font-size: 400%;
-  color: cadetblue;
+.scale {
+  font-size: 100px; /* Increased font size */
+  transition: transform 0.5s ease-in-out; /* Smooth tilt animation */
 }
 
-.scale.right
-{
-  font-size: 400%;
-  color:red ;
+
+button {
+  margin: 5px;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.scale.balanced
-{
-  font-size: 400%;
-  color: green;
+.status {
+  font-weight: bold;
+  font-size: large;
+  text-align: center;
 }
