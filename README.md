@@ -5,7 +5,7 @@ An interactive and educational web-based game designed to help young learners pr
 ## 🌐 Live Demo
 
 🚀 [Click here to try it out!](https://balance-scale-addition-game-1.onrender.com)  
-🔧 Backend API: [https://balance-scale-addition-game.onrender.com](https://balance-scale-addition-game.onrender.com)
+🔧 Backend API(Make sure to launch this first) : [https://balance-scale-addition-game.onrender.com](https://balance-scale-addition-game.onrender.com)
 
 
 ## 📦 Tech Stack
