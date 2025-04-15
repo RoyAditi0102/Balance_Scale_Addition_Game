@@ -71,7 +71,3 @@ uvicorn fapi:app --reload
   [GitHub](https://github.com/RoyAditi0102)
 
 ---
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
