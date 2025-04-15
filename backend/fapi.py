@@ -21,7 +21,7 @@ app.add_middleware(
 ALLOW_REPEATS = True
 
 game_state = {
-    "numbers": list(range(1,10)),  # Digits 0-9
+    "numbers": list(range(1,10)),
     "selected_numbers": [],
     "sum": 0,
     "target": random.randint(10, 20),
@@ -64,12 +64,31 @@ async def select_number(selection: NumberSelection):
 
 @app.post("/reset-game")
 async def reset_game():
-    """Reset the game with digits 0–9 and a new target."""
-    game_state["numbers"] = list(range(10))
+    game_state["numbers"] = list(range(1, 10))
     game_state["selected_numbers"] = []
     game_state["sum"] = 0
     game_state["target"] = random.randint(10, 20)
     game_state["status"] = "Select numbers to match the target!"
     game_state["scale_tilt"] = "balanced"
+
+    return game_state
+
+@app.post("/undo-last")
+async def undo_last_number():
+    """Remove the last selected number and update sum + status."""
+    if game_state["selected_numbers"]:
+        last = game_state["selected_numbers"].pop()
+        game_state["sum"] -= last
+
+        # Update scale tilt and status
+        if game_state["sum"] < game_state["target"]:
+            game_state["scale_tilt"] = "left"
+            game_state["status"] = "Too low! Add more."
+        elif game_state["sum"] > game_state["target"]:
+            game_state["scale_tilt"] = "right"
+            game_state["status"] = "Too high! Remove numbers."
+        else:
+            game_state["scale_tilt"] = "balanced"
+            game_state["status"] = "Correct! You matched the target."
 
     return game_state

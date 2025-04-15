@@ -46,31 +46,26 @@ const fetchGameState = async () => {
     updateScaleTilt();
   } catch (error) {
     console.error("Error fetching game state:", error);
-    statusMessage.value = "Failed to load game!";
+    triggerStatusPop("Failed to load game!");
   }
 };
  const showWinPopup = ref(false);
  
 const selectNumber = async (num) => {
-
+  try {
     const response = await api.post("/select-number", { num });
     sum.value = response.data.sum;
     selectedNumbers.value = response.data.selected_numbers;
-    statusMessage.value = response.data.status;
+    triggerStatusPopup(response.data.status);
     updateScaleTilt();
 
-    if (game_state["sum"] < game_state["target"]) {
-  game_state["scale_tilt"] = "left";
-  game_state["status"] = "Too low! Add more.";
-} else if (game_state["sum"] > game_state["target"]) {
-  game_state["scale_tilt"] = "right";
-  game_state["status"] = "Too high! Remove numbers.";
-} else {
-  game_state["scale_tilt"] = "balanced";
-  game_state["status"] = "Correct! You matched the target.";
-  showWinPopup.value = true; 
-}
-
+    if (response.data.status === "Correct! You matched the target.") {
+      showWinPopup.value = true;
+    }
+  } catch (error) {
+    console.error("Error selecting number", error);
+    triggerStatusPopup("Failed to update selection!");
+  }
 };
 
 const resetGame = async () => {
@@ -80,11 +75,11 @@ const resetGame = async () => {
     sum.value = 0;
     selectedNumbers.value = [];
     target.value = response.data.target;
-    statusMessage.value = "Game Reset!";
+    triggerStatusPopup("Game Reset!");
     scaleTilt.value = "balanced"; 
   } catch (error) {
     console.error("Error resetting game:", error);
-    statusMessage.value = "Failed to reset game!";
+    triggerStatusPopup("Failed to reset game!");
   }
 };
 
@@ -103,18 +98,38 @@ const tiltAngle = computed(() => {
   return Math.max(Math.min(diff * 2, 30), -30);
 });
 
-const clearLastNumber = () => {
-  if (selectedNumbers.value.length > 0) {
-    const last = selectedNumbers.value.pop();
-    sum.value -= last;
-    statusMessage.value = "Last number removed!";
+const clearLastNumber = async () => {
+  try {
+    const response = await api.post("/undo-last");
+    sum.value = response.data.sum;
+    selectedNumbers.value = response.data.selected_numbers;
+    statusMessage.value = response.data.status;
     updateScaleTilt();
+
+    if (response.data.status === "Correct! You matched the target.") {
+      showWinPopup.value = true;
+    } else {
+      showWinPopup.value = false;
+    }
+  } catch (error) {
+    console.error("Error undoing last number:", error);
+    triggerStatusPopup("Failed to undo last number!");
   }
 };
 
 const resetWithPopupClose = () => {
   showWinPopup.value = false;
   resetGame();
+};
+
+const showStatusPopup = ref(false);
+
+const triggerStatusPopup = (message) => {
+  statusMessage.value = message;
+  showStatusPopup.value = true;
+  setTimeout(() => {
+    showStatusPopup.value = false;
+  }, 2000); // Hide after 2 seconds
 };
 
 onMounted(fetchGameState);
@@ -137,9 +152,14 @@ onMounted(fetchGameState);
     <transition name="fade-scale">
       <div class="game-overlay" v-if="!showEntry">
         <div class="game-container">
-          <p>Target Sum: {{ target }}</p>
-
-          <p class="status">{{ statusMessage }}</p>
+          <div class="target-card text-right">
+            Target Sum : {{ target }}
+          </div>
+          <transition name="fade-popup">
+  <div v-if="showStatusPopup" class="status-toast">
+    {{ statusMessage }}
+  </div>
+</transition>
 
           <!-- Balance Scale -->
           <div class="scale-container">
@@ -204,8 +224,8 @@ onMounted(fetchGameState);
 </g>
 
 </g>
-            </svg>
-          </div>
+</svg>
+</div>
 
           <!-- Number Buttons -->
           <div class="numbers">
@@ -220,7 +240,17 @@ onMounted(fetchGameState);
             </button>
           </div>
 
-          <p>Selected Sum: {{ sum }}</p>
+          <div
+  class="sum-card selected-card"
+  :class="{
+    'under': sum < target,
+    'over': sum > target,
+    'matched': sum === target
+  }"
+>
+  Selected Sum: <span>{{ sum }}</span>
+</div>
+
           <!-- Action buttons -->
 <div class="actions">
   <button @click="resetGame">Reset</button>
@@ -232,7 +262,7 @@ onMounted(fetchGameState);
   <transition name="fade-popup">
   <div v-if="showWinPopup" class="win-popup-overlay">
     <div class="win-popup">
-      <h2>🎉 You Matched the Target! 🎯</h2>
+      <h2> You Matched the Target! 🎯</h2>
       <p>Great job, keep practicing!</p>
       <button @click="resetWithPopupClose">Play Again</button>
     </div>

@@ -2,6 +2,7 @@ body
 {
   justify-content: center;
   align-items: center;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
 }
 
 .game-container
@@ -190,4 +191,55 @@ button {
   0% { transform: scale(0.8); }
   70% { transform: scale(1.1); }
   100% { transform: scale(1); }
+}
+
+.status-toast {
+  position: fixed;
+  top: 20px;
+  left: 52%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 12px;
+  z-index: 999;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  font-size: 1.8rem;
+  animation: fadeInOut 2s ease;
+}
+
+@keyframes fadeInOut {
+  0%   { opacity: 0; transform: translateY(-10px) translateX(-50%); }
+  10%  { opacity: 1; transform: translateY(0) translateX(-50%); }
+  90%  { opacity: 1; transform: translateY(0) translateX(-50%); }
+  100% { opacity: 0; transform: translateY(-10px) translateX(-50%); }
+}
+
+.fade-popup-enter-active, .fade-popup-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-popup-enter-from, .fade-popup-leave-to {
+  opacity: 0;
+}
+.selected-card {
+  font-size: x-large;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  padding-bottom: 8px;
+}
+.selected-card.under {
+  color: #0277bd;
+}
+.selected-card.over {
+  color: #c62828;
+}
+.selected-card.matched {
+  color: #2e7d32;
+}
+.target-card {
+  display: flex;
+  font-size: xx-large;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  padding-bottom: 8px;
+  color: #0277bd;
+  justify-content: end;
 }
